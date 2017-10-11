@@ -7,6 +7,7 @@ import {
     SHOW_CREATE_USER,
     HIDE_CREATE_USER,
     UPDATE_USER_FORM,
+    FETCH_USER_LIST,
 } from '../common/contentType';
 
 const defaultUpdateUser = {
@@ -14,6 +15,10 @@ const defaultUpdateUser = {
     age: '',
     name: '',
     id: '',
+    city: {
+        name: 'beijing',
+        brief: 'bj',
+    }
 }
 
 export default (state, action) => {
@@ -30,7 +35,7 @@ export default (state, action) => {
         case SHOW_CREATE_USER:
             return Object.assign({}, state, {
                 showCreate: true,
-                updateUser: defaultUpdateUser
+                updateUser: Object.assign({}, defaultUpdateUser)
             })
         // hide create user form
         case HIDE_CREATE_USER:
@@ -45,8 +50,8 @@ export default (state, action) => {
         // create user
         case CREATE_USER:
             let newUserState = {
-                users: state.users.concat(Object.assign({ id: uuidv1() }, state.updateUser)),
-                updateUser: defaultUpdateUser,
+                users: state.users.concat(Object.assign({}, action.user, { id: uuidv1() })),
+                updateUser: Object.assign({}, defaultUpdateUser),
                 showCreate: false,
             }
             return Object.assign({}, state, newUserState)
@@ -56,13 +61,17 @@ export default (state, action) => {
         // update user
         case UPDATE_USER:
             let newUsers = state.users.map(item => {
-                return item.id === state.updateUser.id ? Object.assign({}, state.updateUser) : item
+                return item.id === action.user.id ? Object.assign({}, state.updateUser) : item
             })
             return Object.assign({},
                 state, {
                     users: newUsers,
-                    updateUser: defaultUpdateUser
+                    showCreate: false,
+                    updateUser: Object.assign({}, defaultUpdateUser)
                 })
+        // fetch user list
+        case FETCH_USER_LIST:
+            return Object.assign({}, state, { users: action.users })
         default:
             return state
     }

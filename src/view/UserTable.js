@@ -1,58 +1,77 @@
 import React, { Component } from 'react';
 import { State } from 'statty';
 import userReducer from '../reducer/user';
+
 import { 
-    DELETE_USER, 
-    SHOW_CREATE_USER, 
-    HIDE_CREATE_USER, 
-    CREATE_USER, 
-    UPDATE_USER, 
-    SHOW_EDIT_USER,
-    UPDATE_USER_FORM 
-} from '../common/contentType';
-
-const dispatchUser = action => state => userReducer(state, action)
-
-const updateUserField = (field, value) => dispatchUser({ type: UPDATE_USER_FORM, user: { [field]: value } })
+    showCreateUser,
+    showEditUser, 
+    hideCreateUser,
+    deleteUser, 
+    fetchUserList,
+    saveUpdateUser,
+    updateUserField,
+    updateUserCitiesField,
+} from '../action/user';
 
 const UserTable = () => (
     <State
-        select={state => ({ users: state.users, showCreate: state.showCreate, updateUser: state.updateUser })}
+        select={
+            state => ({ 
+                users: state.users, 
+                showCreate: state.showCreate, 
+                updateUser: state.updateUser 
+            })
+        }
         render={({ users, showCreate, updateUser }, update) => (
             <article>
                 <section>
-                    <button onClick={() => update(dispatchUser({ type: SHOW_CREATE_USER }))}>add</button>
+                    <button onClick={() => update(showCreateUser())}>add</button>
                 </section>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>name</th>
-                            <th>age</th>
-                            <th>sex</th>
-                            <th>action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {
-                            users.map(user => (
-                                <tr key={user.id}>
-                                    <td>{user.name}</td>
-                                    <td>{user.age}</td>
-                                    <td>{user.sex}</td>
-                                    <td>
-                                        <button onClick={() => update(dispatchUser({ type: SHOW_EDIT_USER, user }))}>edit</button>
-                                        <button onClick={() => update(dispatchUser({ type: DELETE_USER, user }))}>delete</button>
-                                    </td>
-                                </tr>
-                            ))
-                        }
-                    </tbody>
-                </table>
+                <UserListTable update={update} users={users}/>      
                 <UserForm update={update} showCreate={showCreate} updateUser={updateUser}/>
             </article>
         )}
     />
 )
+
+class UserListTable extends Component {
+    componentDidMount() {
+        fetchUserList(this.props.update, {})
+    }
+    render() {
+        const { users, update } = this.props
+        return (
+            <table>
+                <thead>
+                    <tr>
+                        <th>name</th>
+                        <th>age</th>
+                        <th>sex</th>
+                        <th>city</th>
+                        <th>action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {
+                        users.map(user => (
+                            <tr key={user.id}>
+                                <td>{user.name}</td>
+                                <td>{user.age}</td>
+                                <td>{user.sex}</td>
+                                <td>{user.city.brief}-{user.city.name}</td>
+                                <td>
+                                    <button onClick={() => update(showEditUser(user))}>edit</button>
+                                    <button onClick={() => update(deleteUser(user))}>delete</button>
+                                </td>
+                            </tr>
+                        ))
+                    }
+                </tbody>
+            </table>
+        );
+    }
+}
+
 
 class UserForm extends Component {
     constructor(props) {
@@ -62,7 +81,7 @@ class UserForm extends Component {
     
     handleSubmit(e) {
         e.preventDefault()
-        this.props.update(dispatchUser({ type: this.props.updateUser.id ? UPDATE_USER : CREATE_USER }))
+        saveUpdateUser(this.props.update, this.props.updateUser)
     }
 
     render() {
@@ -77,7 +96,7 @@ class UserForm extends Component {
                             type="text" 
                             name="name" 
                             value={updateUser.name}
-                            onChange={(e) => update(updateUserField('name', e.target.value))}
+                            onChange={(e) => update(updateUserField(updateUser, 'name', e.target.value))}
                         />
                     </div>
                     <div>
@@ -86,14 +105,32 @@ class UserForm extends Component {
                             type="number" 
                             name="age" 
                             value={updateUser.age}
-                            onChange={(e) => update(updateUserField('age', e.target.value))}
+                            onChange={(e) => update(updateUserField(updateUser, 'age', e.target.value))}
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="city_name">city name: </label>                                
+                        <input 
+                            type="text" 
+                            name="city_name" 
+                            value={updateUser.city.name}
+                            onChange={(e) => update(updateUserCitiesField(updateUser, 'name', e.target.value))}
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="city_brief">city brief: </label>                                
+                        <input 
+                            type="text" 
+                            name="city_brief" 
+                            value={updateUser.city.brief}
+                            onChange={(e) => update(updateUserCitiesField(updateUser, 'brief', e.target.value))}
                         />
                     </div>
                     <div>
                         <label htmlFor="sex">sex: </label>
                         <select
                             value={updateUser.sex}
-                            onChange={(e) => update(updateUserField('sex', e.target.value))}
+                            onChange={(e) => update(updateUserField(updateUser, 'sex', e.target.value))}
                         >
                             <option value="female">female</option>
                             <option value="male">male</option>
@@ -104,7 +141,7 @@ class UserForm extends Component {
                             type="submit" 
                             value={updateUser.id ? 'edit' : 'create'}
                         />
-                        <button onClick={() => update(dispatchUser({ type: HIDE_CREATE_USER }))}>cancel</button>
+                        <button onClick={() => update(hideCreateUser())}>cancel</button>
                     </div>
                 </form>
                 : null

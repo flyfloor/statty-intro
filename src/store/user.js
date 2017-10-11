@@ -1,15 +1,14 @@
 export default {
-    users: [{
-        id: 1,
-        name: '123',
-        age: 23,
-        sex: 'female',
-    }],
+    users: [],
     showCreate: false,
     updateUser: {
         sex: 'female',
         name: '',
         age: '',
         id: '',
+        cities: {
+            brief: 'bj',
+            name: 'beijing',
+        }
     },
 }
