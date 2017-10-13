@@ -1,6 +1,7 @@
 export default {
     users: [],
     showCreate: false,
+    loading: false,
     updateUser: {
         sex: 'female',
         name: '',

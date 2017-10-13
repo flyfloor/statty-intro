@@ -1,13 +1,15 @@
-import uuidv1 from 'uuid/v1'
+import updateHelper from 'react-addons-update';
+
 import {
     DELETE_USER,
-    CREATE_USER,
-    UPDATE_USER,
     SHOW_EDIT_USER,
     SHOW_CREATE_USER,
+    CREATE_OR_UPDATE_USER,
     HIDE_CREATE_USER,
     UPDATE_USER_FORM,
     FETCH_USER_LIST,
+    SHOW_LOADING,
+    HIDE_LOADING,
 } from '../common/contentType';
 
 const defaultUpdateUser = {
@@ -28,50 +30,63 @@ export default (state, action) => {
             if (!action.user || !action.user.id) {
                 return state
             }
-            return Object.assign({}, state, {
-                users: state.users.filter(u => u.id !== action.user.id)
+            return updateHelper(state, {
+                users: { $set: state.users.filter(u => u.id !== action.user.id) }
             })
         // show create user form
         case SHOW_CREATE_USER:
-            return Object.assign({}, state, {
-                showCreate: true,
-                updateUser: Object.assign({}, defaultUpdateUser)
+            return updateHelper(state, {
+                showCreate: { $set: true },
+                updateUser: { $set: defaultUpdateUser }
             })
         // hide create user form
         case HIDE_CREATE_USER:
-            return Object.assign({}, state, {
-                showCreate: false
+            return updateHelper(state, {
+                showCreate: { $set: false }
             })
         // update user form field value
         case UPDATE_USER_FORM:
             let { updateUser } = state
-            let newUpdateUser = Object.assign({}, updateUser, action.user)
-            return Object.assign({}, state, { updateUser: newUpdateUser })
-        // create user
-        case CREATE_USER:
-            let newUserState = {
-                users: state.users.concat(Object.assign({}, action.user, { id: uuidv1() })),
-                updateUser: Object.assign({}, defaultUpdateUser),
-                showCreate: false,
-            }
-            return Object.assign({}, state, newUserState)
+            return updateHelper(state, {
+                updateUser: { $set: action.user }
+            })
         // show edit user form
         case SHOW_EDIT_USER:
-            return Object.assign({}, state, { updateUser: action.user, showCreate: true })
-        // update user
-        case UPDATE_USER:
-            let newUsers = state.users.map(item => {
-                return item.id === action.user.id ? Object.assign({}, state.updateUser) : item
+            return updateHelper(state, {
+                updateUser: { $set: action.user },
+                showCreate: { $set: true },
             })
-            return Object.assign({},
-                state, {
-                    users: newUsers,
-                    showCreate: false,
-                    updateUser: Object.assign({}, defaultUpdateUser)
+        // update user
+        case CREATE_OR_UPDATE_USER:
+            let allUserIds = state.users.map(item => item.id)
+            let { user } = action
+            // create
+            if (allUserIds.indexOf(user.id) === -1) {
+                return updateHelper(state, {
+                    users: { $push: [Object.assign({}, user)] },
+                    showCreate: { $set: false},
+                    updateUser: { $set: Object.assign({}, defaultUpdateUser) }
                 })
+            }
+            // update
+            return updateHelper(state, {
+                users: { $set: state.users.map(item => item.id === user.id ? Object.assign({}, user) : item) },
+                showCreate: { $set: false},
+                updateUser: { $set: Object.assign({}, defaultUpdateUser) }
+            })
         // fetch user list
         case FETCH_USER_LIST:
-            return Object.assign({}, state, { users: action.users })
+            return updateHelper(state, {
+                users: { $set: action.users }
+            })
+        case SHOW_LOADING:
+            return updateHelper(state, {
+                loading: { $set: true }
+            })
+        case HIDE_LOADING:
+            return updateHelper(state, {
+                loading: { $set: false }
+            })
         default:
             return state
     }

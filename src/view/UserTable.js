@@ -8,7 +8,7 @@ import {
     hideCreateUser,
     deleteUser, 
     fetchUserList,
-    saveUpdateUser,
+    createOrUpdateUser,
     updateUserField,
     updateUserCitiesField,
 } from '../action/user';
@@ -17,18 +17,19 @@ const UserTable = () => (
     <State
         select={
             state => ({ 
+                loading: state.loading,
                 users: state.users, 
                 showCreate: state.showCreate, 
                 updateUser: state.updateUser 
             })
         }
-        render={({ users, showCreate, updateUser }, update) => (
+        render={(state, update) => (
             <article>
                 <section>
                     <button onClick={() => update(showCreateUser())}>add</button>
                 </section>
-                <UserListTable update={update} users={users}/>      
-                <UserForm update={update} showCreate={showCreate} updateUser={updateUser}/>
+                <UserListTable {...state} update={update}/>      
+                <UserForm {...state} update={update} />
             </article>
         )}
     />
@@ -38,8 +39,17 @@ class UserListTable extends Component {
     componentDidMount() {
         fetchUserList(this.props.update, {})
     }
+
+    async onDeleteUser(user) {
+        deleteUser(this.props.update, user)
+    }
+
+    componentWillReceiveProps(nextProps) {
+        console.log(nextProps)
+    }
+
     render() {
-        const { users, update } = this.props
+        const { users, loading, update } = this.props
         return (
             <table>
                 <thead>
@@ -52,8 +62,13 @@ class UserListTable extends Component {
                     </tr>
                 </thead>
                 <tbody>
-                    {
-                        users.map(user => (
+                    { loading ? 
+                        <tr>
+                            <td colSpan={5}>
+                                loading....
+                            </td>
+                        </tr>
+                        : users.map(user => (
                             <tr key={user.id}>
                                 <td>{user.name}</td>
                                 <td>{user.age}</td>
@@ -61,7 +76,7 @@ class UserListTable extends Component {
                                 <td>{user.city.brief}-{user.city.name}</td>
                                 <td>
                                     <button onClick={() => update(showEditUser(user))}>edit</button>
-                                    <button onClick={() => update(deleteUser(user))}>delete</button>
+                                    <button onClick={() => this.onDeleteUser(user)}>delete</button>
                                 </td>
                             </tr>
                         ))
@@ -79,9 +94,14 @@ class UserForm extends Component {
         this.handleSubmit = this.handleSubmit.bind(this)
     }
     
-    handleSubmit(e) {
+    async handleSubmit(e) {
         e.preventDefault()
-        saveUpdateUser(this.props.update, this.props.updateUser)
+        createOrUpdateUser(this.props.update, this.props.updateUser)
+        // let res = await saveUserService(this.props.updateUser)
+        // if (!res || res.error || !res.user) {
+        //     throw new Error({ message: 'save error' })
+        // }
+        // this.props.update(createOrUpdateUser(res.user))
     }
 
     render() {
