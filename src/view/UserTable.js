@@ -97,11 +97,6 @@ class UserForm extends Component {
     async handleSubmit(e) {
         e.preventDefault()
         createOrUpdateUser(this.props.update, this.props.updateUser)
-        // let res = await saveUserService(this.props.updateUser)
-        // if (!res || res.error || !res.user) {
-        //     throw new Error({ message: 'save error' })
-        // }
-        // this.props.update(createOrUpdateUser(res.user))
     }
 
     render() {
