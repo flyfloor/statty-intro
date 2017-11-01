@@ -27,8 +27,10 @@ export const showEditUser = user => state => userReducer(state, { type: SHOW_EDI
 export const hideCreateUser = user => state => userReducer(state, { type: HIDE_CREATE_USER })
 // delete a user
 export const deleteUser = (update, user) => {
+    update(showLoading())
     deleteUserService(user).then(res => {
         update(state => userReducer(state, { type: DELETE_USER, user }))
+        update(hideLoading())
     })
 }
 
@@ -51,13 +53,17 @@ export const updateUserCitiesField = (user, field, value) => state => {
 }
 // fetch user list
 export const fetchUserList = (update, params) => { 
+    update(showLoading())
     fetchUserListService(params).then(res => {
         update(state => userReducer(state, { type: FETCH_USER_LIST, users: res.users }))
+        update(hideLoading())
     })
 }
 // create or update user
 export const createOrUpdateUser = (update, user) => {
+    update(showLoading())
     saveUserService(user).then(res => {
         update(state => userReducer(state, { type: CREATE_OR_UPDATE_USER, user }))
+        update(hideLoading())
     })
 }

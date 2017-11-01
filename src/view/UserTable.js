@@ -44,10 +44,6 @@ class UserListTable extends Component {
         deleteUser(this.props.update, user)
     }
 
-    componentWillReceiveProps(nextProps) {
-        console.log(nextProps)
-    }
-
     render() {
         const { users, loading, update } = this.props
         return (
